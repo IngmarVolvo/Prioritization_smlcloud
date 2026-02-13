@@ -1,10 +1,3 @@
 
 name: data-platform-prioritizer
-command: [
-  "uvicorn",
-  "main:app",
-  "--host",
-  "0.0.0.0",
-  "--port",
-  "8080"
-]
+command: ["python", "main.py"]

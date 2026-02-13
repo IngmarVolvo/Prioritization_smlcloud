@@ -1,23 +1,24 @@
 
 import os
+import uvicorn
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
 app = FastAPI()
 
-# In a Databricks App environment, we serve the index.html for all routes
-# to support client-side routing, or just the root for simple SPAs.
-
+# Serve the main index.html for the root path
 @app.get("/")
 async def read_index():
     return FileResponse("index.html")
 
-# Serve other static files (index.tsx, etc.)
-# Note: The frontend uses ESM imports directly from the browser/CDN
-# so we just need to ensure the local files are accessible.
-app.mount("/", StaticFiles(directory=".", html=True), name="static")
+# Mount the current directory to serve static assets (.tsx, .ts, css, etc.)
+# This allows the browser to fetch the ES modules directly.
+app.mount("/", StaticFiles(directory="."), name="static")
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8080)
+    # Databricks Apps inject the port into DATABRICKS_APP_PORT.
+    # We fallback to PORT or 8080 for local development.
+    port = int(os.environ.get("DATABRICKS_APP_PORT", os.environ.get("PORT", 8080)))
+    # Host must be 0.0.0.0 to be accessible within the Databricks network.
+    uvicorn.run(app, host="0.0.0.0", port=port)
