@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { DataRequest } from '../types';
 import { getStakeholderColor } from '../constants';
 
@@ -45,7 +45,7 @@ const TimelineRoadmap: React.FC<TimelineRoadmapProps> = ({ requests, onUpdateReq
         <div className="mb-6 flex justify-between items-center">
           <div>
             <h3 className="text-xl font-bold text-slate-800">Timeline Strategy Canvas</h3>
-            <p className="text-sm text-slate-500">Drag <span className="text-blue-600 font-bold">Analysis (A)</span> and <span className="text-indigo-600 font-bold">Dev (D)</span> phases to schedule. Click for details.</p>
+            <p className="text-sm text-slate-500">Drag items to reschedule. Click for strategic context.</p>
           </div>
         </div>
 
@@ -74,36 +74,27 @@ const TimelineRoadmap: React.FC<TimelineRoadmapProps> = ({ requests, onUpdateReq
                         const isAnalysis = req.analysisQuarter === q;
                         const isDev = req.devQuarter === q;
                         
+                        const renderCard = (phase: 'analysis' | 'dev') => (
+                          <div
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, req.id, phase)}
+                            onClick={() => setSelectedRequest(req)}
+                            className={`p-2 bg-white rounded-lg border-l-4 shadow-sm cursor-move hover:shadow-md transition-all border border-slate-200 ${phase === 'analysis' ? 'border-l-blue-500' : 'border-l-indigo-500'} ${selectedRequest?.id === req.id ? 'ring-2 ring-indigo-400' : ''}`}
+                          >
+                            <p className="text-[10px] font-bold text-slate-800 leading-tight line-clamp-2 mb-2" title={req.title}>{req.title}</p>
+                            <div className="flex justify-between items-center pt-1 border-t border-slate-50">
+                               <span className={`text-[8px] font-black uppercase tracking-tighter px-1.5 py-0.5 rounded ${phase === 'analysis' ? 'bg-blue-50 text-blue-600' : 'bg-indigo-50 text-indigo-600'}`}>
+                                 {phase === 'analysis' ? 'Analysis' : 'Dev'}
+                               </span>
+                               <span className="text-[8px] font-bold text-slate-300">#{req.id.slice(0,4)}</span>
+                            </div>
+                          </div>
+                        );
+
                         return (
-                          <div key={req.id + (isAnalysis ? '-a' : '-d')} className="space-y-1">
-                            {isAnalysis && (
-                              <div
-                                draggable
-                                onDragStart={(e) => handleDragStart(e, req.id, 'analysis')}
-                                onClick={() => setSelectedRequest(req)}
-                                className={`p-2 bg-white rounded-lg border-l-4 shadow-sm cursor-move hover:shadow-md transition-all border border-slate-200 border-l-blue-500 ${selectedRequest?.id === req.id ? 'ring-2 ring-blue-400' : ''}`}
-                              >
-                                <p className="text-[10px] font-bold text-slate-800 leading-tight truncate mb-1" title={req.title}>{req.title}</p>
-                                <div className="flex justify-between items-center">
-                                   <span className="text-[10px] font-black text-blue-600 uppercase tracking-tighter bg-blue-50 px-1 rounded">Analysis</span>
-                                   <span className="text-[8px] font-bold text-slate-400">#{req.id.slice(0,4)}</span>
-                                </div>
-                              </div>
-                            )}
-                            {isDev && (
-                              <div
-                                draggable
-                                onDragStart={(e) => handleDragStart(e, req.id, 'dev')}
-                                onClick={() => setSelectedRequest(req)}
-                                className={`p-2 bg-white rounded-lg border-l-4 shadow-sm cursor-move hover:shadow-md transition-all border border-slate-200 border-l-indigo-500 ${selectedRequest?.id === req.id ? 'ring-2 ring-indigo-400' : ''}`}
-                              >
-                                <p className="text-[10px] font-bold text-slate-800 leading-tight truncate mb-1" title={req.title}>{req.title}</p>
-                                <div className="flex justify-between items-center">
-                                   <span className="text-[10px] font-black text-indigo-600 uppercase tracking-tighter bg-indigo-50 px-1 rounded">Dev</span>
-                                   <span className="text-[8px] font-bold text-slate-400">#{req.id.slice(0,4)}</span>
-                                </div>
-                              </div>
-                            )}
+                          <div key={req.id + '-group'} className="space-y-1">
+                            {isAnalysis && renderCard('analysis')}
+                            {isDev && renderCard('dev')}
                           </div>
                         );
                       })}

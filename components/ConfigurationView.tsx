@@ -58,11 +58,6 @@ const ConfigurationView: React.FC<ConfigurationViewProps> = ({
     setNewProject({ name: '', description: '', hasDataPlatformDependency: false, assignedTeamIds: [] });
   };
 
-  const cancelEditProject = () => {
-    setEditingProjectId(null);
-    setNewProject({ name: '', description: '', hasDataPlatformDependency: false, assignedTeamIds: [] });
-  };
-
   const handleEditProject = (p: OrgProject) => {
     setEditingProjectId(p.id);
     setNewProject({
@@ -71,16 +66,15 @@ const ConfigurationView: React.FC<ConfigurationViewProps> = ({
       hasDataPlatformDependency: p.hasDataPlatformDependency,
       assignedTeamIds: p.assignedTeamIds
     });
+    // Scroll to the form
+    document.getElementById('project-form')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const removeItem = (type: 'stakeholder' | 'location' | 'team' | 'project', idOrIdx: any) => {
     if (type === 'stakeholder') onUpdateStakeholders(stakeholders.filter((_, i) => i !== idOrIdx));
     if (type === 'location') onUpdateLocations(locations.filter((_, i) => i !== idOrIdx));
     if (type === 'team') onUpdateTeams(teams.filter(t => t.id !== idOrIdx));
-    if (type === 'project') {
-      if (editingProjectId === idOrIdx) cancelEditProject();
-      onUpdateProjects(projects.filter(p => p.id !== idOrIdx));
-    }
+    if (type === 'project') onUpdateProjects(projects.filter(p => p.id !== idOrIdx));
   };
 
   const toggleTeamForProject = (teamId: string) => {
@@ -109,7 +103,7 @@ const ConfigurationView: React.FC<ConfigurationViewProps> = ({
             />
             <button onClick={() => addItem('stakeholder')} className="bg-blue-600 text-white px-4 rounded-lg hover:bg-blue-700 font-bold">Add</button>
           </div>
-          <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+          <div className="space-y-2 max-h-[1200px] overflow-y-auto pr-2 custom-scrollbar">
             {stakeholders.map((s, idx) => (
               <div key={idx} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-100">
                 <span className="font-semibold text-slate-700">{s}</span>
@@ -133,7 +127,7 @@ const ConfigurationView: React.FC<ConfigurationViewProps> = ({
             />
             <button onClick={() => addItem('location')} className="bg-indigo-600 text-white px-4 rounded-lg hover:bg-indigo-700 font-bold">Add</button>
           </div>
-          <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+          <div className="space-y-2 max-h-[1200px] overflow-y-auto pr-2 custom-scrollbar">
             {locations.map((l, idx) => (
               <div key={idx} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-100">
                 <span className="font-semibold text-slate-700">{l}</span>
@@ -157,7 +151,7 @@ const ConfigurationView: React.FC<ConfigurationViewProps> = ({
             />
             <button onClick={() => addItem('team')} className="bg-emerald-600 text-white px-4 rounded-lg hover:bg-emerald-700 font-bold">Add</button>
           </div>
-          <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+          <div className="space-y-2 max-h-[1200px] overflow-y-auto pr-2 custom-scrollbar">
             {teams.map((t) => (
               <div key={t.id} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg border border-slate-100">
                 <span className="font-semibold text-slate-700">{t.name}</span>
@@ -173,20 +167,15 @@ const ConfigurationView: React.FC<ConfigurationViewProps> = ({
             <i className="fa-solid fa-rocket text-orange-600"></i>
             Strategic Initiatives (Big Picture)
           </h3>
-          <div id="project-form" className={`grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 border p-6 rounded-xl transition-all ${editingProjectId ? 'bg-indigo-50 border-indigo-200 ring-2 ring-indigo-100' : 'bg-slate-50/50 border-slate-200'}`}>
+          <div id="project-form" className={`grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 border p-6 rounded-xl transition-all ${editingProjectId ? 'bg-indigo-50 border-indigo-200' : 'bg-slate-50/50 border-slate-200'}`}>
             <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <p className="text-xs font-black uppercase text-slate-400">{editingProjectId ? 'Editing Initiative' : 'New Strategic Initiative'}</p>
-                {editingProjectId && (
-                  <button onClick={cancelEditProject} className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 underline">Cancel Edit</button>
-                )}
-              </div>
+              <p className="text-xs font-black uppercase text-slate-400">{editingProjectId ? 'Editing Initiative' : 'New Strategic Initiative'}</p>
               <input 
-                type="text" className="w-full px-4 py-2 border rounded-lg outline-none bg-white" 
+                type="text" className="w-full px-4 py-2 border rounded-lg outline-none" 
                 placeholder="Project Name..." value={newProject.name} onChange={e => setNewProject({...newProject, name: e.target.value})}
               />
               <textarea 
-                className="w-full px-4 py-2 border rounded-lg outline-none h-24 bg-white" 
+                className="w-full px-4 py-2 border rounded-lg outline-none h-24" 
                 placeholder="Description..." value={newProject.description} onChange={e => setNewProject({...newProject, description: e.target.value})}
               />
               <label className="flex items-center gap-3 cursor-pointer group">
@@ -209,20 +198,18 @@ const ConfigurationView: React.FC<ConfigurationViewProps> = ({
                   </button>
                 ))}
               </div>
-              <div className="flex gap-2 mt-4">
-                <button 
-                  onClick={addProject}
-                  className={`flex-1 py-3 text-white rounded-lg font-bold transition-all shadow-lg ${editingProjectId ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-200' : 'bg-orange-600 hover:bg-orange-700 shadow-orange-100'}`}
-                >
-                  {editingProjectId ? 'Update Initiative' : 'Create Initiative'}
-                </button>
-              </div>
+              <button 
+                onClick={addProject}
+                className="w-full mt-4 py-3 bg-indigo-600 text-white rounded-lg font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-100"
+              >
+                {editingProjectId ? 'Update Initiative' : 'Create Initiative'}
+              </button>
             </div>
           </div>
 
           <div className="space-y-3">
             {projects.map(p => (
-              <div key={p.id} className={`group flex justify-between items-center p-4 rounded-xl border transition-all ${p.hasDataPlatformDependency ? 'bg-indigo-50/50 border-indigo-100' : 'bg-white border-slate-100'} ${editingProjectId === p.id ? 'ring-2 ring-indigo-400' : ''}`}>
+              <div key={p.id} className={`flex justify-between items-center p-4 rounded-xl border ${p.hasDataPlatformDependency ? 'bg-indigo-50 border-indigo-100' : 'bg-white border-slate-100'}`}>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-slate-800">{p.name}</span>
@@ -235,21 +222,9 @@ const ConfigurationView: React.FC<ConfigurationViewProps> = ({
                     })}
                   </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <button 
-                    onClick={() => handleEditProject(p)} 
-                    className="p-2 text-slate-300 hover:text-indigo-600 transition-colors"
-                    title="Edit Initiative"
-                  >
-                    <i className="fa-solid fa-pen-to-square"></i>
-                  </button>
-                  <button 
-                    onClick={() => removeItem('project', p.id)} 
-                    className="p-2 text-slate-300 hover:text-red-500 transition-colors"
-                    title="Delete Initiative"
-                  >
-                    <i className="fa-solid fa-trash-can"></i>
-                  </button>
+                <div className="flex gap-2">
+                  <button onClick={() => handleEditProject(p)} className="text-slate-400 hover:text-indigo-600 p-2 transition-colors"><i className="fa-solid fa-pen-to-square"></i></button>
+                  <button onClick={() => removeItem('project', p.id)} className="text-slate-300 hover:text-red-500 p-2 transition-colors"><i className="fa-solid fa-trash-can"></i></button>
                 </div>
               </div>
             ))}
