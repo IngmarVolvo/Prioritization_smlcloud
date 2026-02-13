@@ -1,0 +1,5 @@
+{
+  "name": "Data Platform Prioritizer",
+  "description": "A RICE-based prioritization tool for Digital Product Managers to manage complex data platform requests across warehouses, global planning, and business functions.",
+  "requestFramePermissions": []
+}
