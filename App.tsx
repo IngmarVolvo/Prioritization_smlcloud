@@ -1,16 +1,16 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { DataRequest, AIInsight, Stakeholder, BusinessProcess, Location, RoleProfile, ChatMessage, OrgTeam, OrgProject } from './types';
-import { DEFAULT_STAKEHOLDERS, DEFAULT_LOCATIONS, DEFAULT_TEAMS, DEFAULT_ORG_PROJECTS, getStakeholderColor } from './constants';
-import RequestForm from './components/RequestForm';
-import RICEChart from './components/RICEChart';
-import MetricCard from './components/MetricCard';
-import StakeholderMatrix from './components/StakeholderMatrix';
-import TimelineRoadmap from './components/TimelineRoadmap';
-import DependencyView from './components/DependencyView';
-import ConfigurationView from './components/ConfigurationView';
-import OrgView from './components/OrgView';
-import { getAIStrategicInsights } from './services/geminiService';
+import { DataRequest, AIInsight, Stakeholder, BusinessProcess, Location, RoleProfile, ChatMessage, OrgTeam, OrgProject } from './types.ts';
+import { DEFAULT_STAKEHOLDERS, DEFAULT_LOCATIONS, DEFAULT_TEAMS, DEFAULT_ORG_PROJECTS, getStakeholderColor } from './constants.tsx';
+import RequestForm from './components/RequestForm.tsx';
+import RICEChart from './components/RICEChart.tsx';
+import MetricCard from './components/MetricCard.tsx';
+import StakeholderMatrix from './components/StakeholderMatrix.tsx';
+import TimelineRoadmap from './components/TimelineRoadmap.tsx';
+import DependencyView from './components/DependencyView.tsx';
+import ConfigurationView from './components/ConfigurationView.tsx';
+import OrgView from './components/OrgView.tsx';
+import { getAIStrategicInsights } from './services/geminiService.ts';
 
 const INITIAL_DATA: DataRequest[] = [
   {
@@ -309,7 +309,7 @@ const App: React.FC = () => {
       {/* Chat Sidebar Modal */}
       {chatRequestId && activeChatRequest && (
         <div className="fixed inset-0 z-50 flex justify-end bg-zinc-900/10 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-sm h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-300 border-l border-zinc-200">
+          <div className="bg-white w-full max-sm h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-300 border-l border-zinc-200">
             <div className="p-6 border-b border-zinc-100 flex justify-between items-center">
               <div>
                 <h3 className="font-bold text-zinc-900">Initiative Chat</h3>
