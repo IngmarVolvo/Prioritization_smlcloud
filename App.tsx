@@ -52,7 +52,6 @@ const App: React.FC = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingRequest, setEditingRequest] = useState<DataRequest | null>(null);
   const [chatRequestId, setChatRequestId] = useState<string | null>(null);
-  const [aiInsight, setAiInsight] = useState<AIInsight | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
 
@@ -65,22 +64,20 @@ const App: React.FC = () => {
         return [...prev, newReq];
       }
     };
-
     if (isDraftMode) setDraftRequests(updateFn);
     else setRequests(updateFn);
-    
     closeForm();
   };
 
   const publishDraft = () => {
-    if (confirm('Overwrite saved roadmap with your draft version?')) {
+    if (confirm('Publish draft changes to the live roadmap?')) {
       setRequests(draftRequests);
       setIsDraftMode(false);
     }
   };
 
   const resetDraft = () => {
-    if (confirm('Discard all draft changes and sync with saved roadmap?')) {
+    if (confirm('Discard all draft changes?')) {
       setDraftRequests(requests);
     }
   };
@@ -104,10 +101,10 @@ const App: React.FC = () => {
   const handleAnalyze = async () => {
     setIsAnalyzing(true);
     try {
-      const insights = await getAIStrategicInsights(activeRequests);
-      setAiInsight(insights);
+      await getAIStrategicInsights(activeRequests);
+      alert("AI Analysis complete. Insights would be displayed in an AI Studio sidebar.");
     } catch (err) {
-      alert("AI Service Error. Check console.");
+      alert("AI Service Error.");
     } finally {
       setIsAnalyzing(false);
     }
@@ -115,7 +112,7 @@ const App: React.FC = () => {
 
   const deleteRequest = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirm('Delete this request?')) {
+    if (confirm('Remove this initiative?')) {
       const fn = (prev: DataRequest[]) => prev.filter(r => r.id !== id);
       if (isDraftMode) setDraftRequests(fn);
       else setRequests(fn);
@@ -134,181 +131,228 @@ const App: React.FC = () => {
   const activeChatRequest = activeRequests.find(r => r.id === chatRequestId);
   const totalEffort = activeRequests.reduce((acc, r) => acc + r.metrics.effort, 0);
 
+  const NAV_ITEMS = [
+    { id: 'backlog', label: 'Backlog', icon: 'fa-solid fa-list-check' },
+    { id: 'matrix', label: 'Value Map', icon: 'fa-solid fa-layer-group' },
+    { id: 'timeline', label: 'Timeline', icon: 'fa-solid fa-calendar-day' },
+    { id: 'org', label: 'Big Picture', icon: 'fa-solid fa-network-wired' },
+    { id: 'dependencies', label: 'Dependencies', icon: 'fa-solid fa-link' },
+    { id: 'config', label: 'Configuration', icon: 'fa-solid fa-sliders' },
+  ];
+
   return (
-    <div className="flex flex-col min-h-screen">
-      <header className="sticky top-0 z-30 bg-slate-900 text-white px-6 py-4 shadow-xl border-b border-slate-800">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row gap-4 justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-900/40">
-              <i className="fa-solid fa-microchip text-xl"></i>
+    <div className="flex min-h-screen bg-[#f8f9fa]">
+      {/* Sidebar Navigation */}
+      <aside className="w-64 bg-white border-r border-zinc-200 flex flex-col sticky top-0 h-screen z-40">
+        <div className="p-6">
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-lg shadow-indigo-100">
+              <i className="fa-solid fa-brain text-white text-sm"></i>
             </div>
             <div>
-              <h1 className="text-xl font-bold tracking-tight">Data Platform Roadmap</h1>
-              <div className="flex items-center gap-2">
-                <p className="text-[9px] text-indigo-400 font-bold uppercase tracking-widest">Priority Console v2.6</p>
-                {isDraftMode && <span className="text-[9px] bg-amber-500 text-white px-1.5 py-0.5 rounded font-black uppercase">Draft Workspace</span>}
-              </div>
+              <h1 className="font-bold text-zinc-900 tracking-tight leading-none text-sm">Prioritizer</h1>
+              <span className="text-[10px] text-indigo-500 font-bold tracking-widest uppercase">AI Studio v2.6</span>
             </div>
           </div>
-          
-          <nav className="flex bg-slate-800 rounded-lg p-1">
-            {[
-              { id: 'backlog', label: 'Backlog' },
-              { id: 'matrix', label: 'Value Map' },
-              { id: 'timeline', label: 'Timeline' },
-              { id: 'org', label: 'Big Picture' },
-              { id: 'dependencies', label: 'Links' },
-              { id: 'config', label: 'Config' }
-            ].map(tab => (
-              <button 
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id as any)}
-                className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all uppercase tracking-tighter ${activeTab === tab.id ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
+
+          <nav className="space-y-1">
+            {NAV_ITEMS.map(item => (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id as any)}
+                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                  activeTab === item.id 
+                    ? 'bg-indigo-50 text-indigo-700' 
+                    : 'text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900'
+                }`}
               >
-                {tab.label}
+                <i className={`${item.icon} w-5 text-center`}></i>
+                {item.label}
               </button>
             ))}
           </nav>
+        </div>
 
-          <div className="flex gap-3">
-            <div className="flex bg-slate-800 p-1 rounded-lg border border-slate-700">
-              <button 
-                onClick={() => setIsDraftMode(false)}
-                className={`px-3 py-1 rounded text-[10px] font-black uppercase transition-all ${!isDraftMode ? 'bg-indigo-600 text-white shadow' : 'text-slate-400'}`}
-              >Live</button>
-              <button 
-                onClick={() => setIsDraftMode(true)}
-                className={`px-3 py-1 rounded text-[10px] font-black uppercase transition-all ${isDraftMode ? 'bg-amber-500 text-white shadow' : 'text-slate-400'}`}
-              >Draft</button>
-            </div>
-            <button onClick={() => { setEditingRequest(null); setIsFormOpen(true); }} className="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-lg font-bold flex items-center gap-2 transition-all text-xs shadow-lg">
-              <i className="fa-solid fa-plus"></i> New
+        <div className="mt-auto p-6 border-t border-zinc-100">
+           <div className="bg-zinc-50 rounded-2xl p-4">
+              <p className="text-[10px] font-bold text-zinc-400 uppercase mb-2">Workspace</p>
+              <div className="flex gap-2">
+                 <button 
+                   onClick={() => setIsDraftMode(false)}
+                   className={`flex-1 py-1.5 text-[11px] font-bold rounded-lg transition-all ${!isDraftMode ? 'bg-white shadow-sm text-zinc-900 ring-1 ring-zinc-200' : 'text-zinc-400'}`}
+                 >Live</button>
+                 <button 
+                   onClick={() => setIsDraftMode(true)}
+                   className={`flex-1 py-1.5 text-[11px] font-bold rounded-lg transition-all ${isDraftMode ? 'bg-indigo-600 text-white shadow-md' : 'text-zinc-400'}`}
+                 >Draft</button>
+              </div>
+           </div>
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <main className="flex-1 flex flex-col">
+        {/* Top bar */}
+        <header className="h-16 bg-white border-b border-zinc-200 flex items-center justify-between px-8 sticky top-0 z-30">
+          <div className="flex items-center gap-4">
+             <h2 className="text-sm font-semibold text-zinc-800 uppercase tracking-widest">
+               {NAV_ITEMS.find(n => n.id === activeTab)?.label}
+             </h2>
+             {isDraftMode && (
+               <span className="bg-amber-100 text-amber-700 text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-tighter">
+                 Draft Mode Active
+               </span>
+             )}
+          </div>
+
+          <div className="flex items-center gap-4">
+            {isDraftMode && (
+              <div className="flex gap-2 pr-4 border-r border-zinc-200">
+                <button onClick={resetDraft} className="text-xs font-bold text-zinc-400 hover:text-zinc-600">Discard</button>
+                <button onClick={publishDraft} className="text-xs font-bold text-indigo-600 hover:text-indigo-800">Publish Changes</button>
+              </div>
+            )}
+            <button 
+              onClick={() => { setEditingRequest(null); setIsFormOpen(true); }}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-xl text-xs font-bold shadow-lg shadow-indigo-100 transition-all flex items-center gap-2"
+            >
+              <i className="fa-solid fa-plus"></i>
+              New Initiative
             </button>
           </div>
-        </div>
-        
-        {isDraftMode && (
-          <div className="bg-amber-500/10 border-t border-amber-500/20 py-2 mt-4 -mx-6 px-6 flex justify-between items-center text-amber-200 text-[10px] font-bold uppercase">
-             <span>You are working on a DRAFT version. Changes are NOT permanent until published.</span>
-             <div className="flex gap-4">
-                <button onClick={resetDraft} className="hover:text-white border-b border-transparent hover:border-white">Discard Draft</button>
-                <button onClick={publishDraft} className="bg-amber-500 text-white px-3 py-1 rounded shadow-lg hover:bg-amber-600">Publish Roadmap</button>
-             </div>
-          </div>
-        )}
-      </header>
+        </header>
 
-      <main className="flex-1 max-w-7xl w-full mx-auto p-6 space-y-6">
-        {activeTab === 'backlog' && (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <MetricCard label="Strategic Value" value={activeRequests.reduce((a,b)=>a+b.score,0).toFixed(0)} icon="fa-solid fa-gem" color="bg-indigo-100 text-indigo-600" />
-              <MetricCard label="Initiatives" value={activeRequests.length} icon="fa-solid fa-list-check" color="bg-blue-100 text-blue-600" />
-              <MetricCard label="Resource Burden" value={`${totalEffort} MD`} icon="fa-solid fa-person-digging" color="bg-emerald-100 text-emerald-600" />
-              <MetricCard label="Node Presence" value={new Set(activeRequests.flatMap(r => r.locations)).size} icon="fa-solid fa-map-location-dot" color="bg-orange-100 text-orange-600" />
-            </div>
+        {/* Content Canvas */}
+        <div className="p-8 max-w-7xl w-full mx-auto">
+          {activeTab === 'backlog' && (
+            <div className="space-y-8 animate-in fade-in duration-500">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <MetricCard label="Strategic Score" value={activeRequests.reduce((a,b)=>a+b.score,0).toFixed(0)} icon="fa-solid fa-gem" color="bg-indigo-50 text-indigo-600" />
+                <MetricCard label="Initiatives" value={activeRequests.length} icon="fa-solid fa-list-check" color="bg-blue-50 text-blue-600" />
+                <MetricCard label="Burden" value={`${totalEffort} MD`} icon="fa-solid fa-users-gear" color="bg-emerald-50 text-emerald-600" />
+                <MetricCard label="Active Hubs" value={new Set(activeRequests.flatMap(r => r.locations)).size} icon="fa-solid fa-location-dot" color="bg-rose-50 text-rose-600" />
+              </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-                <div className="p-4 border-b bg-slate-50 flex justify-between items-center">
-                  <h3 className="font-bold text-slate-800">Master Backlog</h3>
-                  <button onClick={handleAnalyze} disabled={isAnalyzing} className="text-xs font-bold text-indigo-600 hover:text-indigo-800">
-                    {isAnalyzing ? 'Running AI...' : 'Optimize Strategy'}
-                  </button>
-                </div>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left">
-                    <thead>
-                      <tr className="bg-slate-50 border-b text-[9px] font-black uppercase text-slate-500">
-                        <th className="px-6 py-4">Title</th>
-                        <th className="px-6 py-4">Status</th>
-                        <th className="px-6 py-4 text-center">Score</th>
-                        <th className="px-6 py-4 text-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {activeRequests.map(req => (
-                        <tr key={req.id} onClick={() => handleEdit(req)} className="hover:bg-slate-50 cursor-pointer group">
-                          <td className="px-6 py-5">
-                            <p className="font-bold text-slate-800 text-sm leading-tight">{req.title}</p>
-                            <p className="text-[10px] text-slate-400 mt-1 line-clamp-1">{req.description}</p>
-                          </td>
-                          <td className="px-6 py-5">
-                             <div className="flex gap-1">
-                                <span className="text-[8px] bg-blue-100 text-blue-800 font-bold px-1.5 py-0.5 rounded uppercase">A: Q{req.analysisQuarter}</span>
-                                <span className="text-[8px] bg-indigo-100 text-indigo-800 font-bold px-1.5 py-0.5 rounded uppercase">D: Q{req.devQuarter}</span>
-                             </div>
-                          </td>
-                          <td className="px-6 py-5 text-center font-black text-indigo-600 text-lg">{req.score.toFixed(0)}</td>
-                          <td className="px-6 py-5">
-                             <div className="flex justify-end items-center gap-2">
-                                <button onClick={(e) => { e.stopPropagation(); setChatRequestId(req.id); }} className="p-2 text-slate-400 hover:text-indigo-600 relative">
-                                  <i className="fa-solid fa-comment-dots"></i>
-                                  {req.messages.length > 0 && <span className="absolute top-1 right-1 w-3 h-3 bg-indigo-600 text-white text-[7px] flex items-center justify-center rounded-full">{req.messages.length}</span>}
-                                </button>
-                                <button onClick={(e) => deleteRequest(req.id, e)} className="p-2 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all"><i className="fa-solid fa-trash-can"></i></button>
-                             </div>
-                          </td>
+              <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                <div className="xl:col-span-2 bg-white rounded-3xl border border-zinc-200 shadow-sm overflow-hidden">
+                  <div className="px-6 py-4 border-b border-zinc-100 flex justify-between items-center bg-zinc-50/50">
+                    <h3 className="font-bold text-zinc-800 text-sm">Initiative Backlog</h3>
+                    <button onClick={handleAnalyze} disabled={isAnalyzing} className="text-[11px] font-bold text-indigo-600 hover:bg-indigo-50 px-3 py-1.5 rounded-lg transition-colors">
+                      {isAnalyzing ? 'Analyzing...' : 'Strategic Review (AI)'}
+                    </button>
+                  </div>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                      <thead>
+                        <tr className="border-b border-zinc-100 text-[10px] font-bold uppercase text-zinc-400">
+                          <th className="px-6 py-4">Workstream</th>
+                          <th className="px-6 py-4">Status</th>
+                          <th className="px-6 py-4 text-center">Score</th>
+                          <th className="px-6 py-4 text-right">Action</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody className="divide-y divide-zinc-50">
+                        {activeRequests.map(req => (
+                          <tr key={req.id} onClick={() => handleEdit(req)} className="hover:bg-zinc-50 transition-colors cursor-pointer group">
+                            <td className="px-6 py-5">
+                              <p className="font-semibold text-zinc-900 text-sm">{req.title}</p>
+                              <div className="flex gap-1 mt-1">
+                                {req.stakeholders.slice(0, 2).map(s => (
+                                  <span key={s} className="text-[9px] font-medium text-zinc-400">#{s}</span>
+                                ))}
+                              </div>
+                            </td>
+                            <td className="px-6 py-5">
+                               <div className="flex gap-1">
+                                  <span className="text-[9px] bg-zinc-100 text-zinc-600 font-bold px-2 py-0.5 rounded-full">ANLY: Q{req.analysisQuarter}</span>
+                                  <span className="text-[9px] bg-indigo-50 text-indigo-600 font-bold px-2 py-0.5 rounded-full">DEV: Q{req.devQuarter}</span>
+                               </div>
+                            </td>
+                            <td className="px-6 py-5 text-center font-black text-indigo-600 text-base">{req.score.toFixed(0)}</td>
+                            <td className="px-6 py-5">
+                               <div className="flex justify-end gap-2">
+                                  <button onClick={(e) => { e.stopPropagation(); setChatRequestId(req.id); }} className="p-2 text-zinc-300 hover:text-indigo-600 transition-colors">
+                                    <i className="fa-solid fa-comment"></i>
+                                  </button>
+                                  <button onClick={(e) => deleteRequest(req.id, e)} className="p-2 text-zinc-200 hover:text-red-500 transition-colors group-hover:opacity-100 opacity-0">
+                                    <i className="fa-solid fa-trash"></i>
+                                  </button>
+                               </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
-              <div className="space-y-6">
-                <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
-                  <h3 className="font-bold text-slate-800 mb-4">Strategic Balance</h3>
-                  <RICEChart data={activeRequests} />
+                <div className="bg-white rounded-3xl border border-zinc-200 p-6 shadow-sm">
+                   <h3 className="font-bold text-zinc-800 text-sm mb-6">Strategic Potential</h3>
+                   <RICEChart data={activeRequests} />
                 </div>
               </div>
             </div>
-          </>
-        )}
+          )}
 
-        {activeTab === 'matrix' && <StakeholderMatrix requests={activeRequests} onEditRequest={handleEdit} />}
-        {activeTab === 'timeline' && <TimelineRoadmap requests={activeRequests} onUpdateRequest={updateRequest} onEditRequest={handleEdit} />}
-        {activeTab === 'org' && <OrgView projects={orgProjects} teams={teams} />}
-        {activeTab === 'dependencies' && <DependencyView requests={activeRequests} />}
-        {activeTab === 'config' && (
-          <ConfigurationView 
-            stakeholders={stakeholders} locations={locations} teams={teams} projects={orgProjects}
-            onUpdateStakeholders={setStakeholders} onUpdateLocations={setLocations} onUpdateTeams={setTeams} onUpdateProjects={setOrgProjects}
-          />
-        )}
+          {activeTab === 'matrix' && <StakeholderMatrix requests={activeRequests} onEditRequest={handleEdit} />}
+          {activeTab === 'timeline' && <TimelineRoadmap requests={activeRequests} onUpdateRequest={updateRequest} onEditRequest={handleEdit} />}
+          {activeTab === 'org' && <OrgView projects={orgProjects} teams={teams} />}
+          {activeTab === 'dependencies' && <DependencyView requests={activeRequests} />}
+          {activeTab === 'config' && (
+            <ConfigurationView 
+              stakeholders={stakeholders} locations={locations} teams={teams} projects={orgProjects}
+              onUpdateStakeholders={setStakeholders} onUpdateLocations={setLocations} onUpdateTeams={setTeams} onUpdateProjects={setOrgProjects}
+            />
+          )}
+        </div>
       </main>
 
-      {/* Modals */}
+      {/* Chat Sidebar Modal */}
       {chatRequestId && activeChatRequest && (
-        <div className="fixed inset-0 z-50 flex items-center justify-end p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-md h-full max-h-[90vh] rounded-3xl shadow-2xl overflow-hidden flex flex-col">
-            <div className="bg-indigo-600 p-6 text-white flex justify-between items-center">
-              <div><h2 className="text-xl font-bold">Initiative Chat</h2><p className="text-xs opacity-75">{activeChatRequest.title}</p></div>
-              <button onClick={() => setChatRequestId(null)} className="p-2 hover:bg-white/10 rounded-full"><i className="fa-solid fa-xmark text-2xl"></i></button>
+        <div className="fixed inset-0 z-50 flex justify-end bg-zinc-900/10 backdrop-blur-sm">
+          <div className="bg-white w-full max-w-sm h-full shadow-2xl flex flex-col animate-in slide-in-from-right duration-300 border-l border-zinc-200">
+            <div className="p-6 border-b border-zinc-100 flex justify-between items-center">
+              <div>
+                <h3 className="font-bold text-zinc-900">Initiative Chat</h3>
+                <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">{activeChatRequest.title}</p>
+              </div>
+              <button onClick={() => setChatRequestId(null)} className="p-2 text-zinc-400 hover:text-zinc-900">
+                <i className="fa-solid fa-xmark text-lg"></i>
+              </button>
             </div>
-            <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-slate-50">
+            <div className="flex-1 p-6 space-y-4 overflow-y-auto custom-scrollbar bg-zinc-50/30">
               {activeChatRequest.messages.map(msg => (
-                <div key={msg.id} className="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm">
-                  <p className="text-[10px] font-black text-indigo-500 uppercase mb-1">{msg.author}</p>
-                  <p className="text-sm text-slate-700">{msg.text}</p>
+                <div key={msg.id} className="bg-white p-4 rounded-2xl border border-zinc-100 shadow-sm">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest">{msg.author}</span>
+                  </div>
+                  <p className="text-sm text-zinc-700 leading-relaxed">{msg.text}</p>
                 </div>
               ))}
             </div>
-            <div className="p-4 bg-white border-t flex gap-2">
-              <input type="text" className="flex-1 px-4 py-2 bg-slate-100 rounded-full outline-none text-sm" placeholder="Type an idea..." value={chatMessage} onChange={e => setChatMessage(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSendChatMessage()} />
-              <button onClick={handleSendChatMessage} className="w-10 h-10 bg-indigo-600 text-white rounded-full"><i className="fa-solid fa-paper-plane"></i></button>
+            <div className="p-6 bg-white border-t border-zinc-100 flex gap-2">
+              <input 
+                type="text" className="flex-1 px-4 py-2 bg-zinc-50 rounded-xl outline-none text-sm border border-zinc-100 focus:border-indigo-300 transition-colors" 
+                placeholder="Share a thought..." value={chatMessage} onChange={e => setChatMessage(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleSendChatMessage()} 
+              />
+              <button onClick={handleSendChatMessage} className="w-10 h-10 bg-indigo-600 text-white rounded-xl shadow-lg shadow-indigo-100">
+                <i className="fa-solid fa-paper-plane"></i>
+              </button>
             </div>
           </div>
         </div>
       )}
 
+      {/* Large Modal for Form */}
       {isFormOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden">
-            <div className="bg-slate-900 p-6 text-white flex justify-between items-center">
-              <h2 className="text-xl font-bold">{editingRequest ? 'Modify Initiative' : 'New Roadmap Item'}</h2>
-              <button onClick={closeForm} className="text-slate-400 hover:text-white"><i className="fa-solid fa-xmark text-2xl"></i></button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-zinc-900/20 backdrop-blur-[2px]">
+          <div className="bg-white w-full max-w-5xl h-full max-h-[90vh] rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
+            <div className="px-10 py-8 border-b border-zinc-100 flex justify-between items-center">
+              <h2 className="text-xl font-bold text-zinc-900">{editingRequest ? 'Edit Initiative' : 'New Roadmap Item'}</h2>
+              <button onClick={closeForm} className="text-zinc-400 hover:text-zinc-900 p-2">
+                <i className="fa-solid fa-xmark text-2xl"></i>
+              </button>
             </div>
-            <div className="p-8">
+            <div className="flex-1 p-10 overflow-y-auto custom-scrollbar">
               <RequestForm initialData={editingRequest} onSubmit={handleSaveRequest} onCancel={closeForm} stakeholders={stakeholders} locations={locations} />
             </div>
           </div>

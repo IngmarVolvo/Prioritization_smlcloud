@@ -43,11 +43,11 @@ export const IT_PROFILES: RoleProfile[] = ['DPO', 'Domain Architect', 'Tech Lead
 export const ALL_PROFILES = [...BUSINESS_PROFILES, ...IT_PROFILES];
 
 export const IMPACT_LEVELS = [
-  { label: 'Massive (3x)', value: 3 },
-  { label: 'High (2x)', value: 2 },
-  { label: 'Medium (1x)', value: 1 },
-  { label: 'Low (0.5x)', value: 0.5 },
-  { label: 'Minimal (0.25x)', value: 0.25 },
+  { label: 'Massive', value: 3 },
+  { label: 'High', value: 2 },
+  { label: 'Medium', value: 1 },
+  { label: 'Low', value: 0.5 },
+  { label: 'Minimal', value: 0.25 },
 ];
 
 export const CONFIDENCE_LEVELS = [
@@ -62,13 +62,13 @@ export const calculateRICEScore = (metrics: { reach: number; impact: number; con
 };
 
 export const STAKEHOLDER_COLORS: Record<string, string> = {
-  'Warehouse': 'bg-blue-100 text-blue-800 border-blue-200',
-  'Global Planning': 'bg-purple-100 text-purple-800 border-purple-200',
-  'Service Center': 'bg-emerald-100 text-emerald-800 border-emerald-200',
-  'Business Control': 'bg-orange-100 text-orange-800 border-orange-200',
-  'HR': 'bg-pink-100 text-pink-800 border-pink-200',
-  'IT Ops': 'bg-slate-100 text-slate-800 border-slate-200',
-  'Product': 'bg-indigo-100 text-indigo-800 border-indigo-200',
+  'Warehouse': 'bg-indigo-50 text-indigo-700 border-indigo-100',
+  'Global Planning': 'bg-violet-50 text-violet-700 border-violet-100',
+  'Service Center': 'bg-emerald-50 text-emerald-700 border-emerald-100',
+  'Business Control': 'bg-amber-50 text-amber-700 border-amber-100',
+  'HR': 'bg-rose-50 text-rose-700 border-rose-100',
+  'IT Ops': 'bg-zinc-100 text-zinc-700 border-zinc-200',
+  'Product': 'bg-sky-50 text-sky-700 border-sky-100',
 };
 
-export const getStakeholderColor = (s: string) => STAKEHOLDER_COLORS[s] || 'bg-slate-100 text-slate-600 border-slate-200';
+export const getStakeholderColor = (s: string) => STAKEHOLDER_COLORS[s] || 'bg-zinc-100 text-zinc-600 border-zinc-200';
