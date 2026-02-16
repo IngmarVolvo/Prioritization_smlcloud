@@ -2,7 +2,7 @@
 import os
 import uvicorn
 import mimetypes
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -35,22 +35,18 @@ def health_check():
     """Endpoint to verify the backend is active and visible in Swagger."""
     return {"status": "online", "workspace": "databricks"}
 
-@app.get("/")
-async def serve_index():
-    """Explicitly serve the frontend entry point."""
-    return FileResponse("index.html")
-
-# Mount the static files (the current directory)
-# We mount this AFTER the specific API routes to avoid shadowing them.
-app.mount("/", StaticFiles(directory=".", html=True), name="static")
-
-# Catch-all route for SPA behavior
+# Catch-all route for SPA behavior - must be defined BEFORE static mount
 @app.exception_handler(404)
-async def custom_404_handler(request, __):
-    # If the request is for an API or doesn't look like a page request, don't serve index.html
+async def custom_404_handler(request: Request, __):
+    # If the request is for an API endpoint, return 404
     if request.url.path.startswith("/api"):
         return JSONResponse(status_code=404, content={"detail": "Not Found"})
+    # Otherwise serve index.html for SPA routing
     return FileResponse("index.html")
+
+# Mount static files LAST to avoid shadowing API routes
+# This serves all files from current directory including index.html
+app.mount("/", StaticFiles(directory=".", html=True), name="static")
 
 if __name__ == "__main__":
     # Databricks Apps inject the port into DATABRICKS_APP_PORT.
