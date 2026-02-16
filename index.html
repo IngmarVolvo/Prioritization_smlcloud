@@ -26,24 +26,24 @@
     </style>
 
     <!-- 
-      Refined Import Map:
-      Strictly using 19.0.0 across the board to prevent "multiple React instances" error.
-      Removed the trailing slash duplicates which were causing version mismatch.
+      Refined Import Map for Databricks Apps:
+      Strictly using 19.0.0 for all React entries to prevent "multiple React instances" error.
+      We ensure recharts treats react as external to avoid it bringing its own version.
     -->
     <script type="importmap">
-{
-  "imports": {
-    "react": "https://esm.sh/react@19.0.0",
-    "react-dom": "https://esm.sh/react-dom@19.0.0",
-    "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
-    "react/jsx-runtime": "https://esm.sh/react@19.0.0/jsx-runtime",
-    "recharts": "https://esm.sh/recharts@3.7.0?external=react,react-dom",
-    "@google/genai": "https://esm.sh/@google/genai@1.41.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
-    "react/": "https://esm.sh/react@^19.2.4/"
-  }
-}
-</script>
+    {
+      "imports": {
+        "react": "https://esm.sh/react@19.0.0",
+        "react/": "https://esm.sh/react@19.0.0/",
+        "react-dom": "https://esm.sh/react-dom@19.0.0",
+        "react-dom/": "https://esm.sh/react-dom@19.0.0/",
+        "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
+        "react/jsx-runtime": "https://esm.sh/react@19.0.0/jsx-runtime",
+        "recharts": "https://esm.sh/recharts@3.7.0?external=react,react-dom",
+        "@google/genai": "https://esm.sh/@google/genai@1.41.0"
+      }
+    }
+    </script>
     
     <!-- High-performance TSX transpiler -->
     <script src="https://esm.sh/run" type="module"></script>
@@ -52,8 +52,9 @@
     <div id="root"></div>
 
     <!-- 
-      esm.sh/run will pick up this script, transpile the TSX, 
-      and use the import map above for resolution. 
+      The entry point for the application. 
+      The browser will fetch index.tsx, esm.sh/run will transpile it, 
+      and the import map will resolve 'react' and 'App.tsx' correctly.
     -->
     <script type="text/tsx" src="index.tsx"></script>
 </body>
